@@ -1,0 +1,55 @@
+****if ollama run but hang on for a while then you need to run this script command in the terminal:
+    & 'c:\Users\MASUM\Desktop\AI Agent\venv\Scripts\python.exe' 'c:\Users\MASUM\Desktop\AI Agent\ai_agent.py'
+
+****If it never finishes and just freezes forever, your PC may not have enough RAM. 
+    ---llama3 needs at least 8GB RAM to run. You can switch to a lighter model:
+       ollama pull llama3.2:1b
+
+****Then change this line in your ai_agent.py:
+   
+    # Find this in call_ollama_direct:  #previously I used (ollama run llama3:8b) 
+    response = chat(model="llama3", messages=messages)
+
+    # Change to:
+    response = chat(model="llama3.2:1b", messages=messages)
+
+****llama3.2:1b is much faster and only needs ~1GB RAM, good for testing.
+
+
+***For test , you can follow thos pattern using name and main then create object from those classes.
+# to test #
+if __name__ == "__main__":
+    client, collection = init_chromadb(".agent_memory_test")
+    response = run_agent_once("Suggest books about habits", client, collection, user_id="test_user")
+
+    print("Intent:", response["intent"])
+    print("Formatted:", response["formatted"])
+
+***May have to install during build the prompt area.
+    pip install streamlit
+
+    #Run with streamlit
+    streamlit run ai_agent.py
+
+***On the steamlit interface, you can search "Find books on meditations"
+
+***If you want to  Try an even smaller model
+   ollama run tinyllama
+
+***How much RAM do you have? The 1B model needs roughly 2–3 GB free RAM minimum. You can check with:
+   Get-CimInstance Win32_OperatingSystem | Select-Object FreePhysicalMemory
+   
+   Example:
+    The result 655460 is in kilobytes (KB) means:
+    655,460 KB ÷ 1024 = ~640 MB free RAM
+
+***Step 1 — Create the folder and file:
+   --type--
+   mkdir .vscode
+   ---Then type the below command--
+   New-Item .vscode\launch.json
+
+
+****make it env
+python -m venv venv
+./venv/Scripts/activate
