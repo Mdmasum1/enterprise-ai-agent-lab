@@ -25,6 +25,25 @@ def init_chromadb(storage_dir=".chroma_db"):
     # other parts of the project. save and recall data.
     return client, collection
 
+def extract_topic_from_query(user_message):
+    prompt = f"""
+    Extract only the main topic or subject from this user query. 
+    Return 1–4 words only. 
+    No sentences. No extra text.
+
+    Query: "{user_message}"
+    Topic:
+    """
+
+    try:
+        response = chat(model="llama3.2", messages=[{"role": "user", "content": prompt}])
+        topic = response["message"]["content"].strip()
+        return topic
+    except:
+        return user_message
+    
+    
+
 def fetch_openlibrary_by_title_or_subject(query, limit=5):
     """
     search OpenLibrary for books matching the query.
@@ -32,10 +51,15 @@ def fetch_openlibrary_by_title_or_subject(query, limit=5):
      
     """
     #API endpoint for search
+    topic = extract_topic_from_query(user_message)
+    
     url = "https://openlibrary.org/search.json"
     
+    #Create new variable to finalize search query
+    search_query = f"title:({topic}) OR subject: ({topic})"
+    
     #Query parameters
-    params = {"q": query, "limit": limit}
+    params = {"q": search_query, "limit": limit}
     
     #Make a request to the Openlibrary API
     response = requests.get(url, params=params, timeout=15)
