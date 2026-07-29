@@ -200,18 +200,17 @@ User message:
 """
 
 FORMAT_TEMPLATE_STR = """
-You are a friendly book guide.
+You are a friendly tour guide.
 Using the raw book results below, create a clear and beginner friendly reply.
 
 Rules:
-Return up to three books,
-Each line should contain the title, the author, and a short summary,
+Return up to three tour places,
+Each line should contain the destination the user can visit based on the books,
 Keep the language simple.
 
 Raw results:
 {raw_results}
 """
-
 
 intent_prompt = PromptTemplate.from_template(INTENT_TEMPLATE_STR)
 format_prompt = PromptTemplate.from_template(FORMAT_TEMPLATE_STR)
@@ -372,6 +371,21 @@ def submit():
     user_message = st.session_state["user_input"]
 
     if user_message:
+        user_message = st.session_state['user_input']
+    if user_message:
+        
+        if 'active_profile' not in st.session_state or st.session_state.active_profile != username:
+            st.session_state.active_profile = username
+        
+        # load saved chat for this username and populate session history
+        
+        if username:
+                CHROMA_DIR = f".chroma_db_{username}"
+                client, collection = init_chromadb(CHROMA_DIR)
+        else:
+                CHROMA_DIR = ".chroma_db"
+                client, collection = init_chromadb(CHROMA_DIR)
+                
         st.session_state.history.append(("user", user_message))
 
         # Save user's message
