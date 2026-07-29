@@ -200,17 +200,18 @@ User message:
 """
 
 FORMAT_TEMPLATE_STR = """
-You are a friendly tour guide.
+You are a friendly book guide.
 Using the raw book results below, create a clear and beginner friendly reply.
 
 Rules:
-Return up to three tour places,
-Each line should contain the destination the user can visit based on the books,
+Return up to three books,
+Each line should contain the title, the author, and a short summary,
 Keep the language simple.
 
 Raw results:
 {raw_results}
 """
+
 
 intent_prompt = PromptTemplate.from_template(INTENT_TEMPLATE_STR)
 format_prompt = PromptTemplate.from_template(FORMAT_TEMPLATE_STR)
