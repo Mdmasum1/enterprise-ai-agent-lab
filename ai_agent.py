@@ -41,10 +41,11 @@ def extract_topic_from_query(user_message):
     """
 
     try:
-        response = chat(model="llama3", messages=[{"role": "user", "content": prompt}])
+        response = chat(model="tinyllama", messages=[{"role": "user", "content": prompt}])
         topic = response["message"]["content"].strip()
         return topic
-    except:
+    except Exception as e:
+        print("Topic extraction failed:", e)
         return user_message   # fallback to raw query
     
     
@@ -63,7 +64,7 @@ def fetch_openlibrary_by_title_or_subject(query, limit=5):
     search_query = f"title:({topic}) OR subject:({topic})"
 
     # Query parameters
-    params = {"q": search_query, "limit": limit}
+    params = {"q": search_query, "maxResults": limit}
 
     # Make a request to the OpenLibrary API
     try:
@@ -108,7 +109,8 @@ def pretty_raw_results(results):
         author = r.get('author', 'Unknown')
         desc = r.get('desc', '')
         year = r.get('year','unknown')
-        line = f"{title} - {author} -{year} - {desc}"
+        link = r.get('link', 'unknown')
+        line = f"{title} - {author} -{year} - {desc} - {link}"
         lines.append(line)
         
     return "\n".join(lines)    
@@ -183,7 +185,7 @@ def call_ollama_direct(prompt_text):
     """
     messages = [{"role": "user", "content": prompt_text}]
     try:
-        response = chat(model="llama3.2:1b", messages=messages)
+        response = chat(model="tinyllama", messages=messages)
     except Exception as e:
         return f"Error calling Ollama: {e}"
 
@@ -213,11 +215,12 @@ You are a friendly book guide.
 Using the raw book results below, create a clear and beginner friendly reply.
 
 Rules:
- Return up to three books.
- Each line must contain: Title (as a Markdown link), the author, and a one-line summary.
- Preserve any links provided in the raw results: do not remove or rewrite them.
- If a result has no link, still include title and summary.
- Return only Markdown; do not return JSON or plain text explanation.
+- Return up to three books.
+- Each line must contain: Title (as a Markdown link), the author, and a one-line summary.
+- Preserve any links provided in the raw results: do not remove or rewrite them.
+- If a result has no link, still include title and summary.
+- Use ONLY the books listed in "Raw results" below. Do NOT invent or reuse books from the example.
+- Return only Markdown; do not return JSON or plain text explanation.
 
 Raw results (JSON-like):
 {raw_results}
@@ -276,6 +279,7 @@ def run_agent_once(user_message, client=None, collection=None, user_id=None, max
     raw_results = []
     if plan.get("use_openlibrary"):
         raw_results = fetch_openlibrary_by_title_or_subject(user_message, limit=max_hits)
+        print("RAW RESULTS:", raw_results)
 
     if client and collection and raw_results:
         store_to_memory(client, collection, user_message, raw_results, user_id=user_id)
