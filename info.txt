@@ -21,7 +21,7 @@
 if __name__ == "__main__":
     client, collection = init_chromadb(".agent_memory_test")
     response = run_agent_once("Suggest books about habits", client, collection, user_id="test_user")
-
+ 
     print("Intent:", response["intent"])
     print("Formatted:", response["formatted"])
 
@@ -29,7 +29,7 @@ if __name__ == "__main__":
     pip install streamlit
 
     #Run with streamlit
-    streamlit run ai_agent.py
+   streamlit run ai_agent.py
 
 ***On the steamlit interface, you can search "Find books on meditations"
 

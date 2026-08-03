@@ -26,6 +26,11 @@ def init_chromadb(storage_dir=".chroma_db"):
     return client, collection
 
 def extract_topic_from_query(user_message):
+    """
+    Uses LLM to extract the core topic of the user's query.
+    The LLM is NOT generating books, only extracting a subject/topic.
+    """
+
     prompt = f"""
     Extract only the main topic or subject from this user query. 
     Return 1–4 words only. 
@@ -36,11 +41,11 @@ def extract_topic_from_query(user_message):
     """
 
     try:
-        response = chat(model="llama3.2", messages=[{"role": "user", "content": prompt}])
+        response = chat(model="llama3", messages=[{"role": "user", "content": prompt}])
         topic = response["message"]["content"].strip()
         return topic
     except:
-        return user_message
+        return user_message   # fallback to raw query
     
     
 
@@ -102,7 +107,8 @@ def pretty_raw_results(results):
         title = r.get('title', 'Unknown')
         author = r.get('author', 'Unknown')
         desc = r.get('desc', '')
-        line = f"{title} - {author} - {desc}"
+        year = r.get('year','unknown')
+        line = f"{title} - {author} -{year} - {desc}"
         lines.append(line)
         
     return "\n".join(lines)    
@@ -207,12 +213,18 @@ You are a friendly book guide.
 Using the raw book results below, create a clear and beginner friendly reply.
 
 Rules:
-Return up to three books,
-Each line should contain the title, the author, and a short summary,
-Keep the language simple.
+ Return up to three books.
+ Each line must contain: Title (as a Markdown link), the author, and a one-line summary.
+ Preserve any links provided in the raw results: do not remove or rewrite them.
+ If a result has no link, still include title and summary.
+ Return only Markdown; do not return JSON or plain text explanation.
 
-Raw results:
+Raw results (JSON-like):
 {raw_results}
+
+Example output (Markdown):
+1. [Deep Learning](https://books.google.com/...)(year) — Ian Goodfellow — A comprehensive textbook about deep learning...
+2. [Python Crash Course](https://books.google.com/...)(year) — Eric Matthes — A hands-on introduction...
 """
 
 
