@@ -50,42 +50,45 @@ def fetch_openlibrary_by_title_or_subject(query, limit=5):
     Returns a list of dictionaries with title, author, year, and description.
      
     """
-    #API endpoint for search
-    topic = extract_topic_from_query(user_message)
+    # API endpoint for search
+    topic = extract_topic_from_query(query)
     
-    url = "https://openlibrary.org/search.json"
+    url = "https://www.googleapis.com/books/v1/volumes"
     
-    #Create new variable to finalize search query
-    search_query = f"title:({topic}) OR subject: ({topic})"
-    
-    #Query parameters
+    search_query = f"title:({topic}) OR subject:({topic})"
+
+    # Query parameters
     params = {"q": search_query, "limit": limit}
-    
-    #Make a request to the Openlibrary API
-    response = requests.get(url, params=params, timeout=15)
-    
-    #Convert to JSON (Python Dictionary)
-    data = response.json()
-    
-    #Extract book details
+
+    # Make a request to the OpenLibrary API
+    try:
+        response = requests.get(url, params=params, timeout=10)
+        data = response.json()
+    except Exception as e:
+        print("Google Books Error:", e)
+        return []
+
+    items = data.get("items", [])
     results = []
-    
-    docs = data.get("docs", [])[:limit]
-    
-    for book in docs:
-        title = book.get("title")
-        author = ",".join(book.get("author_name", [])) if book.get("author_name") else "unknown"
-        year = book.get("first_publish_year")
-        subjects = book.get("subject", [])
-        desc = subjects[0] if subjects else ""
-        
+
+    for item in items:
+        volume = item.get("volumeInfo", {})
+
+        title = volume.get("title") or "Unknown Title"
+        authors = volume.get("authors", [])
+        author = ", ".join(authors) if authors else "Unknown"
+        year = volume.get("publishedDate", "")
+        desc = volume.get("description", "")[:300]  # trimmed
+        link = volume.get("infoLink", "")
+
         results.append({
             "title": title,
             "author": author,
             "year": year,
-            "desc": desc
+            "desc": desc,
+            "link": link  # adding link for richer formatting support
         })
-        
+
     return results
 
 #Formatting raw results from the model
