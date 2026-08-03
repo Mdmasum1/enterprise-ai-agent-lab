@@ -44,8 +44,7 @@ def extract_topic_from_query(user_message):
         response = chat(model="tinyllama", messages=[{"role": "user", "content": prompt}])
         topic = response["message"]["content"].strip()
         return topic
-    except Exception as e:
-        print("Topic extraction failed:", e)
+    except:
         return user_message   # fallback to raw query
     
     
@@ -58,18 +57,20 @@ def fetch_openlibrary_by_title_or_subject(query, limit=5):
     """
     # API endpoint for search
     topic = extract_topic_from_query(query)
+    print("EXTRACTED TOPIC:", repr(topic))  
     
     url = "https://www.googleapis.com/books/v1/volumes"
     
     search_query = f"title:({topic}) OR subject:({topic})"
 
     # Query parameters
-    params = {"q": search_query, "maxResults": limit}
+    params = {"q": search_query, "limit": limit}
 
     # Make a request to the OpenLibrary API
     try:
         response = requests.get(url, params=params, timeout=10)
         data = response.json()
+        print("GOOGLE BOOKS RESPONSE:", data)
     except Exception as e:
         print("Google Books Error:", e)
         return []
@@ -219,7 +220,6 @@ Rules:
 - Each line must contain: Title (as a Markdown link), the author, and a one-line summary.
 - Preserve any links provided in the raw results: do not remove or rewrite them.
 - If a result has no link, still include title and summary.
-- Use ONLY the books listed in "Raw results" below. Do NOT invent or reuse books from the example.
 - Return only Markdown; do not return JSON or plain text explanation.
 
 Raw results (JSON-like):
@@ -279,7 +279,6 @@ def run_agent_once(user_message, client=None, collection=None, user_id=None, max
     raw_results = []
     if plan.get("use_openlibrary"):
         raw_results = fetch_openlibrary_by_title_or_subject(user_message, limit=max_hits)
-        print("RAW RESULTS:", raw_results)
 
     if client and collection and raw_results:
         store_to_memory(client, collection, user_message, raw_results, user_id=user_id)
